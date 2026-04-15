@@ -11,15 +11,11 @@ import cv2
 from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
-
 SEED = 42
 random.seed(SEED)
 np.random.seed(SEED)
-
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tiff"}
 DATA_PATH = "/kaggle/input/datasets/scientifictechz1253/disaster-management/Comprehensive Disaster Dataset(CDD)/CDD_Augmented"
-
-
 OUTPUT_DIR = "/kaggle/working/pipeline_outputs"
 IMG_SIZE   = 224  
 EDA_SAMPLE = 500  
@@ -42,13 +38,12 @@ def auto_find_data_path(root="/kaggle/input"):
 
 if not Path(DATA_PATH).exists():
     print(f"Manual path not found: {DATA_PATH}")
-    print("Trying auto-detection...")
     detected = auto_find_data_path()
     if detected:
         DATA_PATH = detected
     else:
-        print("Could not find dataset. Run: !find /kaggle/input -type d")
-        raise FileNotFoundError("Dataset not found. Please set DATA_PATH manually.")
+        print("Could not find dataset")
+        raise FileNotFoundError("Dataset not found.")
 
 
 def collect_image_paths(data_path):
@@ -75,7 +70,7 @@ paths, labels, class_names, class_to_idx = collect_image_paths(DATA_PATH)
 counts = Counter(labels)
 total  = len(paths)
 
-print("\nClass Distribution:")
+print("\nClass Distribution")
 for i, cls in enumerate(class_names):
     cnt = counts[i]
     print(f"   {cls:30s}: {cnt:5d}  ({cnt/total*100:.1f}%)")
@@ -93,7 +88,6 @@ plt.savefig(f"{OUTPUT_DIR}/eda/1_class_distribution.png", dpi=150)
 plt.show()
 print(f"Saved: {OUTPUT_DIR}/eda/1_class_distribution.png")
 
-print("\nSampling image sizes...")
 sample_paths = random.sample(paths, min(EDA_SAMPLE, total))
 widths, heights, aspects, corrupt = [], [], [], []
 
@@ -105,11 +99,11 @@ for p in tqdm(sample_paths, desc="Reading sizes"):
     except Exception:
         corrupt.append(p)
 
-print(f"   Width  → min:{min(widths)}  max:{max(widths)}  mean:{np.mean(widths):.0f}")
-print(f"   Height → min:{min(heights)}  max:{max(heights)}  mean:{np.mean(heights):.0f}")
-print(f"   Corrupt files found: {len(corrupt)}")
+print(f"Width→min:{min(widths)}  max:{max(widths)}  mean:{np.mean(widths):.0f}")
+print(f"Height → min:{min(heights)}  max:{max(heights)}  mean:{np.mean(heights):.0f}")
+print(f"Corrupt files found: {len(corrupt)}")
 
-fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+fig,axes=plt.subplots(1, 3, figsize=(15, 4))
 axes[0].hist(widths,   bins=40, color='steelblue',     edgecolor='black')
 axes[0].set_title("Width Distribution");  axes[0].set_xlabel("Width (px)")
 axes[1].hist(heights,  bins=40, color='tomato',         edgecolor='black')
@@ -143,8 +137,6 @@ for row, cls_idx in enumerate(range(len(class_names))):
 plt.tight_layout()
 plt.savefig(f"{OUTPUT_DIR}/eda/3_sample_grid.png", dpi=120, bbox_inches='tight')
 plt.show()
-
-
 print("\nComputing mean RGB per class...")
 class_rgb = {i: [] for i in range(len(class_names))}
 for p, l in tqdm(random.sample(list(zip(paths, labels)), min(300, total)), desc="RGB"):
@@ -193,4 +185,3 @@ plt.tight_layout()
 plt.savefig(f"{OUTPUT_DIR}/eda/5_brightness_blur.png", dpi=150)
 plt.show()
 
-print("\nEDA complete! All plots saved to:", f"{OUTPUT_DIR}/eda/")
