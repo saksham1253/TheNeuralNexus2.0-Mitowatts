@@ -22,6 +22,11 @@
 
 ![sd](rgb_m_s.jpeg)
 <br>
+
+8. RGB Intensity
+![i](intensity_histogram.png)
+
+ ---
 ## Model trained for SHAP(SHapley Additive exPlanations) for visualization and analysis
 1. Model used : Ensemble learning using efficientNetB3 + CBAM(The Concerns Based Adoption Model)
    - **Results**
