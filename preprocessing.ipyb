@@ -1,0 +1,80 @@
+def resize_with_padding(img, target_size=(224, 224), pad_color=(0, 0, 0)):
+    h, w = img.shape[:2]; th, tw = target_size
+    scale = min(tw / w, th / h)
+    nw, nh = int(w * scale), int(h * scale)
+    resized = cv2.resize(img, (nw, nh), interpolation=cv2.INTER_AREA)
+    pt = (th - nh) 
+    pl = (tw - nw)
+    return cv2.copyMakeBorder(resized, pt, pb, pl, pr, cv2.BORDER_CONSTANT, value=pad_color)
+
+def preprocess_image(img_path, target_size=(224, 224)):
+    try:
+        arr = np.array(Image.open(img_path).convert("RGB"), dtype=np.uint8)
+        arr = resize_with_padding(arr, target_size)
+        arr = cv2.fastNlMeansDenoisingColored(arr, None, h=10, hColor=10,
+                                              templateWindowSize=7, searchWindowSize=21)
+        lab = cv2.cvtColor(arr, cv2.COLOR_RGB2LAB)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        lab[:, :, 0] = clahe.apply(lab[:, :, 0])
+        arr = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+        return arr.astype(np.float32) / 255.0
+    except Exception as e:
+        return None
+        
+print("\nBefore / After Preprocessing comparison")
+n_rows = len(class_names) * VIS_PER_CLS
+fig, axes = plt.subplots(n_rows, 2, figsize=(8, n_rows * 2.5))
+fig.suptitle("Before vs After Preprocessing", fontsize=14, fontweight='bold', y=1.005)
+row = 0
+for cls_idx, cls_name in enumerate(class_names):
+    samples = random.sample(class_path_map[cls_idx], min(VIS_PER_CLS, len(class_path_map[cls_idx])))
+    for p in samples:
+        try:
+            orig = np.array(Image.open(p).convert("RGB"))
+            proc = preprocess_image(p, (IMG_SIZE, IMG_SIZE))
+            axes[row, 0].imshow(orig)
+            axes[row, 0].set_title(f"{cls_name}\n{orig.shape[1]}×{orig.shape[0]}", fontsize=7)
+            axes[row, 0].axis("off")
+            if proc is not None:
+                axes[row, 1].imshow(proc)
+                axes[row, 1].set_title(f"{IMG_SIZE}×{IMG_SIZE} processed", fontsize=7)
+            axes[row, 1].axis("off")
+        except Exception:
+            axes[row, 0].axis("off"); axes[row, 1].axis("off")
+        row += 1
+
+plt.tight_layout()
+plt.savefig(f"{OUTPUT_DIR}/preprocessing/before_after.png", dpi=120, bbox_inches='tight')
+plt.show()
+
+print(f"\nProcessing all {len(paths)} images")
+processed_images, processed_labels, failed = [], [], []
+
+for p, l in tqdm(zip(paths, labels), total=len(paths), desc="Preprocessing"):
+    result = preprocess_image(p, (IMG_SIZE, IMG_SIZE))
+    if result is not None:
+        processed_images.append(result)
+        processed_labels.append(l)
+    else:
+        failed.append(p)
+
+print("\nComputing normalization stats")
+sample = random.sample(processed_images, min(200, len(processed_images)))
+stacked = np.stack(sample)
+mean_px = stacked.mean(axis=(0, 1, 2))
+std_px  = stacked.std(axis=(0, 1, 2))
+
+print(f"Channel means (R,G,B): {mean_px.round(4)}")
+print(f"Channel stds  (R,G,B): {std_px.round(4)}")
+print(f"\n Use these for model normalization:")
+print(f"mean = {mean_px.tolist()}")
+print(f"std  = {std_px.tolist()}")
+
+stats_path = f"{OUTPUT_DIR}/preprocessing/normalization_stats.txt"
+with open(stats_path, "w") as f:
+    f.write(f"mean = {mean_px.tolist()}\n")
+    f.write(f"std  = {std_px.tolist()}\n")
+print(f"Saved: {stats_path}")
+print("\nSaving processed arrays to /kaggle/working ...")
+np.save(f"{OUTPUT_DIR}/preprocessing/images.npy", np.stack(processed_images).astype(np.float32))
+np.save(f"{OUTPUT_DIR}/preprocessing/labels.npy", np.array(processed_labels))
