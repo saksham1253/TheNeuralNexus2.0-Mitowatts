@@ -381,6 +381,13 @@ Includes:
 * **Low accuracy** → tune ensemble weights
 
 ---
+## 9. Our Inovation
+
+## 10. GUI
+* Image Classification
+  - ![i](i.png)
+* Real time prediction
+  - ![r](r.png)
 
 ## Final Note
 
