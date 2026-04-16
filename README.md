@@ -31,9 +31,9 @@
 1. Model used : Ensemble learning using efficientNetB3 + CBAM(The Concerns Based Adoption Model)
    - **Results**
    - Accuracy Matrix 
-     ![a](amatrix.png)
+     ![a](acc.jpg)
    - Confusion Matrix
-     ![c](cmatrix.png)
+     ![c](c.jpg)
    - SHAP Visualization
      ![s](SHAP.png)
 
