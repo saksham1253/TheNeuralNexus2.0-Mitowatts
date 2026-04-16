@@ -382,12 +382,14 @@ Includes:
 
 ---
 ## 9. Our Inovation
+- We are using frames form cctv videos to generete alerts and send sos to the users and authorities(via mail , sms...).
+- Some time the disaster like fire spreading gets unoticed during night time, so we are automating this process by using the data from already available cctvs .
 
 ## 10. GUI
 * Image Classification
-  - ![i](i.png)
+  - ![i](i.jpeg)
 * Real time prediction
-  - ![r](r.png)
+  - ![r](r.jpg)
 
 ## Final Note
 
